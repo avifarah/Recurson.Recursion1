@@ -18,7 +18,7 @@ namespace Recursion1
             *		n = 3:	Palindrome(n) = 3 2 1 1 2 3
             *		etc...
             *  Write a recursive program that will take n as input and produce the list:
-            *		n (n - 1) (n - 2) . . 2 1 1 2 . . (n - 2) (n - 1) n
+            *		n (n - 1) . . 2 1 1 2 . . (n - 1) n
             */
             try
             {
@@ -44,7 +44,10 @@ namespace Recursion1
                 var p = PowerOf.Power(baseValue, n);
                 var trust = Math.Pow(baseValue, n);
                 var check = (trust - p) / trust;
-                Console.WriteLine($"PowerOf.Power({baseValue}, {n,2}): {p}{(check > 1e-15 ? $"  Check detected an error.  {trust} vs {p}" : string.Empty)}");
+
+                // We will write the check of Math.Pow(baseValue, n) only if there is a sufficient difference between
+                // the C# Math.Pow library and our recursive Power result
+                Console.WriteLine($"PowerOf.Power({baseValue}, {n,2}): {p}{(check > 1e-15 ? $"  Expected: {trust}  Actual: {p}" : string.Empty)}");
             }
 
             /*
@@ -61,11 +64,13 @@ namespace Recursion1
             *		(a + b)^1 = 1*a + 1*b
             *		(a + b)^2 = 1*a^2 + 2*a*b + 1*b^2
             *		(a + b)^3 = 1*a^3 + 3*a^2*b + 3*a*b^2 + 1*b^3
-            *  Write a recursive program that return the n'th row of Archimedis triangle
+            *
+            *  Assignment:
+            *       Write a recursive program that return the n'th row of Archimedis triangle
             */
-            var row = 0;
             Console.WriteLine();
             Console.WriteLine($"Pascal's triangle.");
+            var row = 0;
             try
             {
                 for ( ; row < 6; ++row)
@@ -129,18 +134,54 @@ namespace Recursion1
     {
         public static List<int> GetPalindrome(int n)
         {
-            if (n < 1) throw new ArgumentException($"intput given {n} is not allowed.  It is expected to be positive", nameof(n));
+            // Sanity check that need not be done at the beginning of every recursive call
+            if (n < 1)
+                throw new ArgumentException($"intput given {n} is not allowed.  It is expected to be positive", nameof(n));
 
     		//return PalindromeHelper(n).ToList();
 
-            // In case we do not have access to IEnumerable's yield return construct:
-            var list = new List<int>();
-            PalindromeHelper2(n, list);
-            return list;
+            // In case we do not have access to IEnumerable's "yield return" construct.
+            // See explanation for "yield return" in the PalindromeHelper(..) summary.
+            //return PalindromeHelper2(n);
+
+            // Optinization over PalindromeHelper3
+            var pal = new List<int>();
+            PalindromeHelper3(n, pal);
+            return pal;
+
+            // Another option is:
+            // return PalindromeHelper3(n, new List<int>());
         }
 	
         /// <summary>
         /// Assumption input to PalindromeHelper cannot be smaller than 1
+        ///
+        /// Recursive definition:
+        ///     List { n } + Palindrome(n - 1) + List { n }
+        ///
+        /// In order to understand this routine we need to understand the C# yield keyword:
+        /// When the method return IEnumerable<type T>
+        ///         private static IEnumerable<int> PalindromeHelper(int n)
+        ///                        ^^^^^^^^^^^^^^^^
+        /// a yield return tells the compiler to return the current value but return to that very spot
+        /// for the nect method call.
+        /// Example:
+        ///     Enumerable.Range(1, 5) will return an IEnumerable<int> { 1, 2, 3, 4, 5 }
+        ///     The difference between IEnumerable<int> and List<int> is that:
+        ///         * a list is an ordered collection of integers, allowing random access of the elements via an index, removal etc
+        ///         * an IEnumerable<int> allows only access to current element and move next.
+        /// Continue with example:
+        ///             IEnumerable<int> fun() {
+        ///                 foreach (var i in Enumerable.Range(1, 5))
+        ///                     yield return i;
+        ///             }
+        ///             IEnumerable<int> sq() {
+        ///                 foreach (var n in fun())
+        ///                     Console.WriteLine(n * n);
+        ///             }
+        ///
+        /// Since not every language has an equivalent of the "yield return" construct, I provided a second Helper:
+        ///     PalindromeHelper2
         /// </summary>
         private static IEnumerable<int> PalindromeHelper(int n)
         {
@@ -160,36 +201,101 @@ namespace Recursion1
 
         /// <summary>
         /// Assumption input to PalindromeHelper2 cannot be smaller than 1
+        ///
+        /// Syntax:
+        ///     The question mark (?) suffix after List<int>? in the method declaration:
+        ///         private static List<int> PalindromeHelper2(int n, List<int>? palindrome = null)
+        ///                                                           ^^^^^^^^^^
+        ///     Indicates that the varable palindrome may be null.  Without the ? suffix if
+        ///     the complier's static time analysis would flag palindrome as a WARNING if the
+        ///     compiler "thinks" that palindrome may get a null value
         /// </summary>
-        private static void PalindromeHelper2(int n, List<int> palindrome)
+        private static List<int> PalindromeHelper2(int n, List<int>? palindrome = null)
         {
-            if (n == 0) return;
-
-    		palindrome.Add(n);
+            if (n == 0)
+                return new List<int> {};
 
             // Recursive definition
-            PalindromeHelper2(n - 1, palindrome);
+            var list = new List<int> { n };
+            list.AddRange(PalindromeHelper2(n - 1, palindrome));
+            list.Add(n);
+
+            return list;
+        }
+
+        /// <summary>
+        /// An optimization over PalindromeHellper3 is having to initialize a single palindrome list
+        /// in this routine.
+        ///
+        /// This PalindromeHlper3(..) algorithm works because we start with palindrom = empty list
+        ///
+        /// When n <= 1 the calling routine eliminates this option with an exception
+        /// when n = 1 then we add 1 to an empty list then call PalindromeHelper3(0, emptylist) then add 1.  Works as advertised.
+        /// when n = 2 then we add 2 to an empty list, then call PalindromeHelper3(1, List { 2 }) then add 2.  Works as advertised.
+        /// when n = 3 then we add 3 to an empty list, then call PalindromeHelper3(1, List { 3 }) then add 3.  Works as advertised.
+        /// etc...
+        ///
+        /// The return palindrom is superfluous because the calling routine can access the parameter palindrome!
+        /// </summary>
+        private static List<int> PalindromeHelper3(int n, List<int> palindrome)
+        {
+            if (n == 0)
+                return palindrome;
 
             palindrome.Add(n);
+            _ = PalindromeHelper3(n - 1, palindrome);
+            palindrome.Add(n);
+
+            // This return is superfluous
+            return palindrome;
         }
     }
 
+    /// <summary>
+    /// Terminating condition expValue == 0:	baseValue^0 = 1
+    ///
+    /// Recursive definition:
+    /// if expValue > 0
+    /// 		Recursive definition:	baseValue^n = baseValue * baseValue^(expValue - 1)
+    /// if expValue < 0
+    /// 		Recursive definition:	baseValue^n = (1 / baseValue) * baseValue^(expValue + 1)
+    ///
+    /// Note, we make 2 checks at the beginning of each recursive call. One check can be eliminated
+    /// If expValue > 0 then it is always > 0 until terminating condition whre expValue == 0
+    /// and visa versa if expValue < 0 then it is always < 0 until the terminating condition.
+    ///
+    /// Therefore, we can make an optimization and make the positive / negative check once
+    /// </summary.
     class PowerOf
     {
-        // Terminating condition expValue == 0:	baseValue^0 = 1
-
-        // if expValue > 0
-        // 		Recursive definition:	baseValue^n = baseValue * baseValue^(expValue - 1)
-        // if expValue < 0
-        // 		Recursive definition:	baseValue^n = (1 / baseValue) * baseValue^(expValue + 1)
         public static double Power(int baseValue, int expValue)
         {
             if (expValue == 0)
                 return 1.0;
+
             if (expValue > 0)
-                return baseValue * Power(baseValue, expValue - 1);
-            else
-                return (1.0 / baseValue) * Power(baseValue, expValue + 1);
+                return PostiveExpPow(baseValue, expValue);
+
+            return NegativeExpPow(baseValue, expValue);
+        }
+
+        private static double PostiveExpPow(int baseValue, int expValue)
+        {
+            if (expValue == 0)
+                return 1.0;
+
+            // Tail recursion
+            return baseValue * PostiveExpPow(baseValue, expValue - 1);
+        }
+
+        private static double NegativeExpPow(int baseValue, int expValue)
+        {
+            if (expValue == 0)
+                return 1.0;
+
+            // Tail recursion
+            return (1.0 / baseValue) * NegativeExpPow(baseValue, expValue + 1);
+
         }
     }
 
@@ -197,33 +303,73 @@ namespace Recursion1
     {
         public static IEnumerable<int> PascalsRow(int n)
         {
-            if (n < 0) throw new ArgumentException($"input value of {n} is illegal.  Expected value of 0 or more", nameof(n));
+            // A one time check that need not be repeated before every recursive call
+            if (n < 0)
+                throw new ArgumentException($"input value of {n} is illegal.  Expected value of 0 or more", nameof(n));
 
+            // The recursive call starts with row[0] that has a value of list<int> { 1 }
             var row0 = new List<int> { 1 };
-            var res = PascalRowHelper(row0, 0, n);
+            var res = PascalRowHelper(row0, n);
             return res;
         }
 
-        private static IEnumerable<int> PascalRowHelper(IEnumerable<int> list, int current, int n)
+        /// <summary>
+        /// This is a conversion from an iteration to recursion
+        ///
+        ///Given row[0]
+        /// row[1] = Next(row[0])
+        /// row[2] = Next(Next[0]))
+        /// etc...
+        /// </summary>
+        private static IEnumerable<int> PascalRowHelper(IEnumerable<int> row, int n)
         {
             // Terminating condition: if current count reached the limit that we are looking for then we are done
-            if (n - current == 0)
-                return list;
+            if (n == 0)
+                return row;
 
-            // Process the current row
-            var next = new List<int> { 1 }
-                .Concat(Next2(list))
-                .Concat(new List<int> { 1 });
+            // Next row: Process the current row to reach next row
+            var next = Next(row);
 
-            // Generate the next row recursively.
-            return PascalRowHelper(next, current + 1, n);
+            // Generate the next row recursively
+            // This is tail recursion equivalent to an itegration
+            // ..   second parameter increases, third parameter remains the original n
+            return PascalRowHelper(next, n - 1);
         }
 
         /// <summary>
-        /// Returns the n - 1 (list[i] + list[i+1]) items
+        /// Given row[n]:
+        ///     row[n+1] = list { 1 }
+        ///         + (n - 1 list){ row[n] { fun: (k from 0 to n - 1) => (row[n][k] + row[n][k+1])}} 
+        ///         + list { 1 }
+        ///     row[n+1] = Next(row[n])
+        /// </summary>
+        private static IEnumerable<int> Next(IEnumerable<int> row)
+        {
+            // return new List<int> { 1 }
+            //     .Concat(Next1Helper(row))
+            //     .Concat(new List<int> { 1 });
+            return new List<int> { 1 }
+                .Concat(Next2Helper(row))
+                .Concat(new List<int> { 1 });
+        }
+
+        private static IEnumerable<int> Next1Helper(IEnumerable<int> list)
+        {
+            if (list.Count() > 1)
+            {
+                yield return list.First() + list.Skip(1).First();
+                var res = Next1Helper(list.Skip(1));
+                foreach (var elem in res)
+                    yield return elem;
+            }
+        }
+
+        /// <summary>
+        /// Similar to Next1(..) except that this routine does not use yield return
+        /// Returns the n - 1 items (list[k] + list[k+1]) items where k runs from 0 .. n - 1
         /// This row is missing the leading and trailing 1's
         /// </summary>
-        private static List<int> Next2(IEnumerable<int> list)
+        private static List<int> Next2Helper(IEnumerable<int> list)
         {
             // Terminating condition is list contains 1 element only
             var res = new List<int>();
@@ -238,22 +384,8 @@ namespace Recursion1
             res.Add(list.First() + list.Skip(1).First());
 
             // Recursive definition: Add the rest of the list
-            res.AddRange(Next2(list.Skip(1)));
+            res.AddRange(Next2Helper(list.Skip(1)));
             return res;
-        }
-
-        /// <summary>
-        /// Similar to Next2(..) except that this routine uses yield return
-        /// </summary>
-        private static IEnumerable<int> Next(IEnumerable<int> list)
-        {
-            if (list.Count() > 1)
-            {
-                yield return list.First() + list.Skip(1).First();
-                var res = Next(list.Skip(1));
-                foreach (var elem in res)
-                    yield return elem;
-            }
         }
     }
 
@@ -313,10 +445,12 @@ namespace Recursion1
         }
 	
         /// <summary>
-        /// We need to Move n - 1 disks from A (p1) to B (p2) using p3
-        /// Then move a single disk from A (p1) to C (p3)
-        /// Then move the tower from B (p2) to C (p3) using p1
-        /// In this way no smaller disk will lay on a bigger disk
+        /// Recursive definition:
+        ///         We need to Move n - 1 disks from A (p1) to B (p2) using p3
+        ///         Move a single disk from A (p1) to C (p3)
+        ///         Move the tower from B (p2) to C (p3) using p1
+        ///
+        /// In this way no larger disk will lay on a smaller disk
         /// </summary>
         private static void MoveTowerHelper(int n, Peg p1, Peg p2, Peg p3)
         {
