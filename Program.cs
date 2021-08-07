@@ -29,7 +29,7 @@ namespace Recursion1
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error while processing Archimedis' row 2.  Internal message: {ex.Message}");
+                Console.WriteLine($"Error while processing Pascal's row 2.  Internal message: {ex.Message}");
             }
 
             /*
@@ -66,7 +66,7 @@ namespace Recursion1
             *		(a + b)^3 = 1*a^3 + 3*a^2*b + 3*a*b^2 + 1*b^3
             *
             *  Assignment:
-            *       Write a recursive program that return the n'th row of Archimedis triangle
+            *       Write a recursive program that return the n'th row of Pascal's triangle
             */
             Console.WriteLine();
             Console.WriteLine($"Pascal's triangle.");
@@ -144,7 +144,7 @@ namespace Recursion1
             // See explanation for "yield return" in the PalindromeHelper(..) summary.
             //return PalindromeHelper2(n);
 
-            // Optinization over PalindromeHelper3
+            // Optimization over PalindromeHelper3
             var pal = new List<int>();
             PalindromeHelper3(n, pal);
             return pal;
@@ -190,7 +190,7 @@ namespace Recursion1
             {
                 yield return n;
 			
-                // Recursive definition: PlindromeHelper(n) = n PalindromeHelper(n - 1) n
+                // Recursive definition: PalindromeHelper(n) = n PalindromeHelper(n - 1) n
                 var innerPalindrome = PalindromeHelper(n - 1);
                 foreach (var m in innerPalindrome)
                     yield return m;
@@ -227,7 +227,7 @@ namespace Recursion1
         /// An optimization over PalindromeHellper3 is having to initialize a single palindrome list
         /// in this routine.
         ///
-        /// This PalindromeHlper3(..) algorithm works because we start with palindrom = empty list
+        /// This PalindromeHelper3(..) algorithm works because we start with palindrom = empty list
         ///
         /// When n <= 1 the calling routine eliminates this option with an exception
         /// when n = 1 then we add 1 to an empty list then call PalindromeHelper3(0, emptylist) then add 1.  Works as advertised.
@@ -261,7 +261,7 @@ namespace Recursion1
     /// 		Recursive definition:	baseValue^n = (1 / baseValue) * baseValue^(expValue + 1)
     ///
     /// Note, we make 2 checks at the beginning of each recursive call. One check can be eliminated
-    /// If expValue > 0 then it is always > 0 until terminating condition whre expValue == 0
+    /// If expValue > 0 then it is always > 0 until terminating condition where expValue == 0
     /// and visa versa if expValue < 0 then it is always < 0 until the terminating condition.
     ///
     /// Therefore, we can make an optimization and make the positive / negative check once
@@ -314,12 +314,13 @@ namespace Recursion1
         }
 
         /// <summary>
-        /// This is a conversion from an iteration to recursion
-        ///
         ///Given row[0]
-        /// row[1] = Next(row[0])
-        /// row[2] = Next(Next[0]))
-        /// etc...
+        ///     row[1] = Next(row[0])
+        ///     row[2] = Next(Next[0]))
+        ///     etc...
+        ///
+        /// So recursively Call Next(..) with a count n
+        /// When count reaches 0 then we are done!
         /// </summary>
         private static IEnumerable<int> PascalRowHelper(IEnumerable<int> row, int n)
         {
@@ -331,15 +332,15 @@ namespace Recursion1
             var next = Next(row);
 
             // Generate the next row recursively
-            // This is tail recursion equivalent to an itegration
-            // ..   second parameter increases, third parameter remains the original n
+            // This is tail recursion equivalent to an iteration
+            // ..   second parameter, n, decreases to 0
             return PascalRowHelper(next, n - 1);
         }
 
         /// <summary>
         /// Given row[n]:
         ///     row[n+1] = list { 1 }
-        ///         + (n - 1 list){ row[n] { fun: (k from 0 to n - 1) => (row[n][k] + row[n][k+1])}} 
+        ///         + (n - 1 item list)(row[n] (k in (0 .. n-1) | row[n][k] + row[n][k+1]))
         ///         + list { 1 }
         ///     row[n+1] = Next(row[n])
         /// </summary>
@@ -353,9 +354,21 @@ namespace Recursion1
                 .Concat(new List<int> { 1 });
         }
 
+        /// <summary>
+        /// For a "yield return" discussion see summary for method: PalindromeHelper(..)
+        /// list.Skip(n) generates a new IEnumerable collection starting with the n'th
+        /// indexed element as opposed to the 0'th element.
+        ///
+        /// For discussion of IEnumerable see: the summary of PalindromeHelper(..)
+        /// </summary>
         private static IEnumerable<int> Next1Helper(IEnumerable<int> list)
         {
-            if (list.Count() > 1)
+            //
+            // list.Count() will run through the entire collection therefore the check for
+            //         if (list.Count() > 1)        -- O(n)
+            // can be optimized to:
+            //         if (list.Skip(1).Any())      -- O(2)
+            if (list.Skip(1).Any())
             {
                 yield return list.First() + list.Skip(1).First();
                 var res = Next1Helper(list.Skip(1));
@@ -365,7 +378,7 @@ namespace Recursion1
         }
 
         /// <summary>
-        /// Similar to Next1(..) except that this routine does not use yield return
+        /// Similar to Next1(..) except that this routine does not use the "yield return" construct
         /// Returns the n - 1 items (list[k] + list[k+1]) items where k runs from 0 .. n - 1
         /// This row is missing the leading and trailing 1's
         /// </summary>
@@ -407,10 +420,14 @@ namespace Recursion1
             if (n == 0) return 0;
             if (n == 1) return 1;
 
-            // recursive definition
+            // Recursive definition
+            // Note the double recursive all -- making it an expensive call
             return FibHelper(n - 1) + FibHelper(n - 2);
         }
 
+        /// <summary>
+        /// This is a more efficient algorithm for the Fibonacci Helper
+        /// </summary>
         private static BigInteger FibHelper2(int current, int next, int n)
         {
             if (n == 0) return current;
