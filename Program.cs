@@ -227,6 +227,11 @@ namespace Recursion1
         {
             // Terminating condition is list contains 1 element only
             var res = new List<int>();
+
+            // Syntax:
+            //      ! prefix indicates NOT logical operator
+            //      list.Skip(1) will return the original list skipping the 0'th element
+            //      .Any() will return true if the list contains at least 1 element
             if (!list.Skip(1).Any()) return res;
 
             // Process the first 2 items by adding them then add them to the res list
@@ -237,6 +242,9 @@ namespace Recursion1
             return res;
         }
 
+        /// <summary>
+        /// Similar to Next2(..) except that this routine uses yield return
+        /// </summary>
         private static IEnumerable<int> Next(IEnumerable<int> list)
         {
             if (list.Count() > 1)
@@ -298,7 +306,9 @@ namespace Recursion1
         /// </summary>
         public static void MoveTower(int diskCount, Peg p1, Peg p2, Peg p3)
         {
-            if (diskCount <= 0) throw new ArgumentException($"diskCount value ({diskCount}) is invalid.  It must be a positive number", nameof(diskCount));
+            if (diskCount <= 0)
+                throw new ArgumentException($"diskCount value ({diskCount}) is invalid.  It must be a positive number", nameof(diskCount));
+
             MoveTowerHelper(diskCount, p1, p2, p3);
         }
 	
