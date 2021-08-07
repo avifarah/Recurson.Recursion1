@@ -290,6 +290,8 @@ namespace Recursion1
         *  We need to move the disks from peg A to peg C (using B) such that we:
         *		A.	move 1 disk at a time and 
         *		B.	No bigger disk sits on top of a smaller disk.
+        *
+        * See: https://www.mathsisfun.com/games/towerofhanoi.html
         */
         /// <summary>
         /// Originally we need to move the Tower from A (p1) to C (p3)
