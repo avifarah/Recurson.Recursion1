@@ -29,7 +29,7 @@ namespace Recursion1
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error while processing Pascal's row 2.  Internal message: {ex.Message}");
+                Console.WriteLine($"Error while processing Palindrome(..).  Internal message: {ex.Message}");
             }
 
             /*
@@ -349,8 +349,15 @@ namespace Recursion1
             // return new List<int> { 1 }
             //     .Concat(Next1Helper(row))
             //     .Concat(new List<int> { 1 });
+
+            // return new List<int> { 1 }
+            //     .Concat(Next2Helper(row))
+            //     .Concat(new List<int> { 1 });
+            
+            var res = new List<int>();
+            Next2OptHelper(row, res);
             return new List<int> { 1 }
-                .Concat(Next2Helper(row))
+                .Concat(res)
                 .Concat(new List<int> { 1 });
         }
 
@@ -372,6 +379,13 @@ namespace Recursion1
             {
                 yield return list.First() + list.Skip(1).First();
                 var res = Next1Helper(list.Skip(1));
+
+                // This is an artifact of the "yield return" construct.  We cannot
+                // directly return res despite the fact that it is of type IEnumerable<int>
+                // since it references the called helper method (1 up the chain of recursion):
+                // Next1Helper(..).
+                //
+                // In order to return res, we need to "yield return" element by element.
                 foreach (var elem in res)
                     yield return elem;
             }
@@ -384,20 +398,42 @@ namespace Recursion1
         /// </summary>
         private static List<int> Next2Helper(IEnumerable<int> list)
         {
-            // Terminating condition is list contains 1 element only
             var res = new List<int>();
 
+            // Terminating condition is list contains 1 element only
             // Syntax:
             //      ! prefix indicates NOT logical operator
             //      list.Skip(1) will return the original list skipping the 0'th element
             //      .Any() will return true if the list contains at least 1 element
-            if (!list.Skip(1).Any()) return res;
+            if (! list.Skip(1).Any()) return res;
 
             // Process the first 2 items by adding them then add them to the res list
             res.Add(list.First() + list.Skip(1).First());
 
             // Recursive definition: Add the rest of the list
             res.AddRange(Next2Helper(list.Skip(1)));
+            return res;
+        }
+
+        /// <summary>
+        /// An optimization can be done to Next2Helper(..).  Instead of creating the res
+        /// list on every call we can pass an empty list and populate it in the recursive
+        /// call.
+        /// </summary>
+        private static List<int> Next2OptHelper(IEnumerable<int> rowRemaining, List<int> res)
+        {
+            // Terminating condition is list contains 1 element only
+            // Syntax:
+            //      ! prefix indicates NOT logical operator
+            //      list.Skip(1) will return the original list skipping the 0'th element
+            //      .Any() will return true if the list contains at least 1 element
+            if (! rowRemaining.Skip(1).Any()) return res;
+
+            // Process the first 2 items by adding them then add them to the res list
+            res.Add(rowRemaining.First() + rowRemaining.Skip(1).First());
+
+            // Recursive definition: Add the rest of the list
+            res.AddRange(Next2Helper(rowRemaining.Skip(1)));
             return res;
         }
     }
