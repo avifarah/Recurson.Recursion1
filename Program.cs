@@ -20,16 +20,16 @@ namespace Recursion1
             *  Write a recursive program that will take n as input and produce the list:
             *		n (n - 1) . . 2 1 1 2 . . (n - 1) n
             */
+            int n = 5;
             try
             {
-                int test = 5;
-                var pal = Palindrome.GetPalindrome(test);
-                Console.WriteLine($"Palindrome.GetPalindrome({test})");
+                var pal = Palindrome.GetPalindrome(n);
+                Console.WriteLine($"Palindrome.GetPalindrome({n})");
                 Console.WriteLine(string.Join(" ", pal));
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error while processing Palindrome(..).  Internal message: {ex.Message}");
+                Console.WriteLine($"Error while processing Palindrome({n}).  Internal message: {ex.Message}");
             }
 
             /*
