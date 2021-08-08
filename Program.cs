@@ -368,22 +368,27 @@ namespace Recursion1
         ///
         /// For discussion of IEnumerable see: the summary of PalindromeHelper(..)
         /// </summary>
-        private static IEnumerable<int> Next1Helper(IEnumerable<int> list)
+        private static IEnumerable<int> Next1Helper(IEnumerable<int> rowRemaining)
         {
             //
             // list.Count() will run through the entire collection therefore the check for
             //         if (list.Count() > 1)        -- O(n)
             // can be optimized to:
             //         if (list.Skip(1).Any())      -- O(2)
-            if (list.Skip(1).Any())
+            //
+            // Terminating condition:
+            if (rowRemaining.Skip(1).Any())
             {
-                yield return list.First() + list.Skip(1).First();
-                var res = Next1Helper(list.Skip(1));
+                yield return rowRemaining.First() + rowRemaining.Skip(1).First();
+                var res = Next1Helper(rowRemaining.Skip(1));
 
                 // This is an artifact of the "yield return" construct.  We cannot
-                // directly return res despite the fact that it is of type IEnumerable<int>
-                // since it references the called helper method (1 up the chain of recursion):
-                // Next1Helper(..).
+                // directly return res 
+                //          var res = Next1Helper(list.Skip(1));
+                //              ^^^
+                // despite the fact that res is of type IEnumerable<int>, since res
+                // references the IEnumerable of the called helper method (1 down the 
+                // chain of recursion)
                 //
                 // In order to return res, we need to "yield return" element by element.
                 foreach (var elem in res)
