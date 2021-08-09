@@ -697,7 +697,7 @@ class FindWordInBoard
         return nextPositions;
 	}
 	
-	private char[][] BoardClone(char[][] board)
+	private static char[][] BoardClone(char[][] board)
 	{
 		var b = new char[rows][];
 		for (var r = 0; r < rows; ++r)
