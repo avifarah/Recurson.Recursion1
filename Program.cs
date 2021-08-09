@@ -387,7 +387,7 @@ namespace Recursion1
                 return row;
 
             // Next row: Process the current row to reach next row
-            var next = Next(row);
+            var next = NextRow(row);
 
             // Generate the next row recursively
             // This is tail recursion equivalent to an iteration
@@ -402,20 +402,19 @@ namespace Recursion1
         ///         + list { 1 }
         ///     row[n+1] = Next(row[n])
         /// </summary>
-        private static IEnumerable<int> Next(IEnumerable<int> row)
+        private static IEnumerable<int> NextRow(IEnumerable<int> row)
         {
             // return new List<int> { 1 }
-            //     .Concat(Next1Helper(row))
+            //     .Concat(AdditionOfPairs1(row))
             //     .Concat(new List<int> { 1 });
 
             // return new List<int> { 1 }
-            //     .Concat(Next2Helper(row))
+            //     .Concat(AdditionOfPairs2(row))
             //     .Concat(new List<int> { 1 });
             
-            var res = new List<int>();
-            Next2OptHelper(row, res);
+            var pairs = new List<int>();
             return new List<int> { 1 }
-                .Concat(res)
+                .Concat(AdditionOfPairs3(row, pairs))
                 .Concat(new List<int> { 1 });
         }
 
@@ -426,7 +425,7 @@ namespace Recursion1
         ///
         /// For discussion of IEnumerable see: the summary of PalindromeHelper(..)
         /// </summary>
-        private static IEnumerable<int> Next1Helper(IEnumerable<int> rowRemaining)
+        private static IEnumerable<int> AdditionOfPairs1(IEnumerable<int> rowRemaining)
         {
             //
             // list.Count() will run through the entire collection therefore the check for
@@ -438,7 +437,7 @@ namespace Recursion1
             if (rowRemaining.Skip(1).Any())
             {
                 yield return rowRemaining.First() + rowRemaining.Skip(1).First();
-                var res = Next1Helper(rowRemaining.Skip(1));
+                var res = AdditionOfPairs1(rowRemaining.Skip(1));
 
                 // This is an artifact of the "yield return" construct.  We cannot
                 // directly return res 
@@ -459,7 +458,7 @@ namespace Recursion1
         /// Returns the n - 1 items (list[k] + list[k+1]) items where k runs from 0 .. n - 1
         /// This row is missing the leading and trailing 1's
         /// </summary>
-        private static List<int> Next2Helper(IEnumerable<int> list)
+        private static List<int> AdditionOfPairs2(IEnumerable<int> list)
         {
             var res = new List<int>();
 
@@ -474,7 +473,7 @@ namespace Recursion1
             res.Add(list.First() + list.Skip(1).First());
 
             // Recursive definition: Add the rest of the list
-            res.AddRange(Next2Helper(list.Skip(1)));
+            res.AddRange(AdditionOfPairs2(list.Skip(1)));
             return res;
         }
 
@@ -483,21 +482,21 @@ namespace Recursion1
         /// list on every call we can pass an empty list and populate it in the recursive
         /// call.
         /// </summary>
-        private static List<int> Next2OptHelper(IEnumerable<int> rowRemaining, List<int> res)
+        private static List<int> AdditionOfPairs3(IEnumerable<int> rowRemaining, List<int> pairs)
         {
             // Terminating condition is list contains 1 element only
             // Syntax:
             //      ! prefix indicates NOT logical operator
             //      list.Skip(1) will return the original list skipping the 0'th element
             //      .Any() will return true if the list contains at least 1 element
-            if (! rowRemaining.Skip(1).Any()) return res;
+            if (! rowRemaining.Skip(1).Any()) return pairs;
 
             // Process the first 2 items by adding them then add them to the res list
-            res.Add(rowRemaining.First() + rowRemaining.Skip(1).First());
+            pairs.Add(rowRemaining.First() + rowRemaining.Skip(1).First());
 
             // Recursive definition: Add the rest of the list
-            res.AddRange(Next2Helper(rowRemaining.Skip(1)));
-            return res;
+            pairs.AddRange(AdditionOfPairs2(rowRemaining.Skip(1)));
+            return pairs;
         }
     }
 
