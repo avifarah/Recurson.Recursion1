@@ -39,10 +39,10 @@ namespace Recursion1
             Console.WriteLine();
             Console.WriteLine("Power:");
             var baseValue = 5;
-            for (var n = -5; n <= 5; ++n)
+            for (var exp = -5; exp <= 5; ++exp)
             {
-                var p = PowerOf.Power(baseValue, n);
-                var trust = Math.Pow(baseValue, n);
+                var p = PowerOf.Power(baseValue, exp);
+                var trust = Math.Pow(baseValue, exp);
                 var check = (trust - p) / trust;
 
                 // We will write the check of Math.Pow(baseValue, n) only if there is a sufficient difference between
@@ -107,26 +107,84 @@ namespace Recursion1
                 Console.WriteLine($"Error while processing Fibonacci({fibValue}).  Internal message: {ex.Message}");
             }
 
-            // If diskCount == 1
-            //		MoveDisk:	A -> C
-            // if diskCount == 2
-            //		MoveDisk:	A -> B
-            //		MoveDisk:	A -> C
-            //		MoveDisk:	B -> c
+            /*
+            * We have n disks stacked in size order where the smallest is at the top.
+            * We have 3 pegs A, B and C
+            * The disks are stacked on Peg A
+            *
+            * Our task is to move the disks from Peg A to Peg C by using Peg B, such that:
+            * 		1	We move one disk at a time
+            *		2	No larger disk is ever placed on top of a smaller disk
+            *
+            * If diskCount == 1
+            *		MoveDisk:	A -> C		(no sweat)
+            * if diskCount == 2
+            *		MoveDisk:	A -> B		(Peg B is empty and is the place holder peg.  The disk moved is the smaller disk)
+            *		MoveDisk:	A -> C		(Move the larger disk to the destination Peg, C)
+            *		MoveDisk:	B -> C		(Move the smaller disk from B on top of the larger disk on C)
+            * etc...
+            */
             var diskCount = 3;
             try
             {
                 Console.WriteLine();
                 Console.WriteLine($"Tower of Hanoi with {diskCount} disks:");
-                TowerOfHanoi.Peg fromPeg = TowerOfHanoi.Peg.A;
-                TowerOfHanoi.Peg toPeg = TowerOfHanoi.Peg.C;
-                TowerOfHanoi.Peg usingPeg = TowerOfHanoi.Peg.B;
+                var fromPeg = TowerOfHanoi.Peg.A;
+                var toPeg = TowerOfHanoi.Peg.C;
+                var usingPeg = TowerOfHanoi.Peg.B;
                 TowerOfHanoi.MoveTower(diskCount, fromPeg, usingPeg, toPeg);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error while processing TowerOfHanoi({diskCount}).  Internal message: {ex.Message}");
             }
+
+            /*
+             * A bonus question:
+             *
+             * *Question *: 
+             * 		Given a board of characters and a target string, 
+             *      determine if a given word exists in the board or not
+             *      using each letter only once.
+             *
+             * char[][] board, String word
+             *
+             * *Input:*
+             * 		board =
+             * 			[['A', 'B', 'C', 'E'],
+             *  		 ['C', 'E', 'S', 'D'],
+             *  		 ['B', 'C', 'C', 'F']]
+             *
+             * Examples:
+             *      word: ABCED → true
+             * word: ABCES → False
+             */
+            Console.WriteLine();
+            Console.WriteLine("Find word in letter board");
+       		var word = "BCESC";
+            var find = new FindWordInBoard(word);
+            var success = find.Find();
+            Console.WriteLine($"{word,10}: Found:  Expected:  True.  Actual: {success,5}");
+
+            word = "BCC";
+            find = new FindWordInBoard(word);
+            success = find.Find();
+            Console.WriteLine($"{word,10}: Found:  Expected:  True.  Actual: {success,5}");
+
+            word = "BCCC";
+            find = new FindWordInBoard(word);
+            success = find.Find();
+            Console.WriteLine($"{word,10}: Found:  Expected: False.  Actual: {success,5}");
+
+            word = "BCECCS";
+            find = new FindWordInBoard(word);
+            success = find.Find();
+            Console.WriteLine($"{word,10}: Found:  Expected:  True.  Actual: {success,5}");
+
+            word = "BCECCD";
+            find = new FindWordInBoard(word);
+            success = find.Find();
+            Console.WriteLine($"{word,10}: Found:  Expected: False.  Actual: {success,5}");
         }
     }
 
@@ -530,4 +588,122 @@ namespace Recursion1
             Console.WriteLine($"{fr} -> {to}");
         }
     }
+}
+class FindWordInBoard
+{
+	private const int cols = 4;
+	private int rows = 3;
+	private string LookingFor;
+
+	private static char[][] _board = new char[][] {
+			new char[] { 'A', 'B', 'C', 'E' },
+			new char[] { 'C', 'E', 'S', 'D' },
+			new char[] { 'B', 'C', 'C', 'F' }
+		};
+
+	public FindWordInBoard(string word)
+	{
+		LookingFor = word;
+	}
+
+	public bool Find()
+	{
+		// For each first letter match see if we have a match of the whole word
+		// If we do then we are done
+		for (var i = 0; i < rows; ++i)
+		{
+			for (var j = 0; j < cols; ++j)
+			{
+				if (_board[i][j] == LookingFor[0])
+				{
+					// First letter match is of index 0
+					var b = BoardClone(_board);
+					b[i][j] = ' ';
+
+					// Match the rest of the word starting with index == 1
+					var rc = Match((i, j), 1, b);
+					if (rc) return true;
+				}
+			}
+		}
+
+		// We found no match
+		return false;
+	}
+
+	/// <summary>
+	/// Recursively look for a match
+    ///
+    /// This is an interesting problem as the solution finds the maximum letters match it can trace
+    /// thereafter it will return True for succeeded or False, it did not find all the letters in the word.
+    /// If the answer is True--word was matched in its entirety then we are done.
+    /// If the answer is False, then we go back to the next NextStep() option and see if we matched the word completely.
+	/// </summary>
+	/// <param name="pos">(i, j) position of letter in LookingFor[inx - 1]</param>
+	/// <param name="inx">index such that the letter: LookingFor[inx] is checked for a match</param>
+	/// <param name="board">board to look through</param>
+	/// <returns>LookingFor word found or not</returns>
+	private bool Match((int i, int j) pos, int inx, char[][] board)
+	{
+        // Terminating condition
+        // We matched the entire word.  Return true and we are done!
+		if (inx == LookingFor.Length)
+			return true;
+
+        // For our recursive definition (this is the intersting part):
+        // For each NextStep(..) we recursively look for the rest of the word.
+        // So if we come back with a false meaning the path we took up to now did not
+        // match the entire word, then we simply attept the next option of NextStep(..)
+        // for the letter in the index: inx.
+		foreach ((int i, int j) np in NextStep((pos.i, pos.j)))
+		{
+			if (board[np.i][np.j] == LookingFor[inx])
+			{
+				var b = BoardClone(board);
+				b[np.i][np.j] = ' ';
+
+                // Recursive call.  Matches the rest of the word.
+				var rc = Match(np, inx + 1, b);
+				if (rc) return true;
+			}
+		}
+
+		return false;
+	}
+
+#if false
+	private IEnumerable<(int, int)> NextStep((int i, int j) position)
+	{
+		if (position.i - 1 >= 0)   yield return (position.i - 1, position.j);
+		if (position.i + 1 < rows) yield return (position.i + 1, position.j);
+		if (position.j - 1 >= 0)   yield return (position.i,     position.j - 1);
+		if (position.j + 1 < cols) yield return (position.i,     position.j + 1);
+	}
+#endif
+
+    /// <summary>
+    /// Without using yield return...
+    /// </summary
+	private IEnumerable<(int, int)> NextStep((int i, int j) position)
+	{
+        var nextPositions = new List<(int, int)>();
+		if (position.i - 1 >= 0)   nextPositions.Add((position.i - 1, position.j));
+		if (position.i + 1 < rows) nextPositions.Add((position.i + 1, position.j));
+		if (position.j - 1 >= 0)   nextPositions.Add((position.i,     position.j - 1));
+		if (position.j + 1 < cols) nextPositions.Add((position.i,     position.j + 1));
+        return nextPositions;
+	}
+	
+	private char[][] BoardClone(char[][] board)
+	{
+		var b = new char[rows][];
+		for (var r = 0; r < rows; ++r)
+		{
+			b[r] = new char[cols];
+			for (var c = 0; c < cols; ++c)
+				b[r][c] = board[r][c];
+		}
+
+		return b;
+	}
 }
