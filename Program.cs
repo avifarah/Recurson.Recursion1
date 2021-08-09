@@ -592,10 +592,10 @@ namespace Recursion1
 class FindWordInBoard
 {
 	private const int cols = 4;
-	private int rows = 3;
-	private string LookingFor;
+	private const int rows = 3;
+	private readonly string LookingFor;
 
-	private static char[][] _board = new char[][] {
+	private static readonly char[][] _board = new char[][] {
 			new char[] { 'A', 'B', 'C', 'E' },
 			new char[] { 'C', 'E', 'S', 'D' },
 			new char[] { 'B', 'C', 'C', 'F' }
@@ -672,6 +672,9 @@ class FindWordInBoard
 	}
 
 #if false
+    /// <summary>
+    /// Using the yield return construct...
+    /// </summary>
 	private IEnumerable<(int, int)> NextStep((int i, int j) position)
 	{
 		if (position.i - 1 >= 0)   yield return (position.i - 1, position.j);
