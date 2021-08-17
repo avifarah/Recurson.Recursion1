@@ -12,14 +12,14 @@ namespace Recursion1
         static void Main(string[] args)
         {
             /*
-            *  Palindrome n:
-            *		n = 1:	Palindrome(n) = 1 1
-            *		n = 2:	Palindrome(n) = 2 1 1 2
-            *		n = 3:	Palindrome(n) = 3 2 1 1 2 3
-            *		etc...
-            *  Write a recursive program that will take n as input and produce the list:
-            *		n (n - 1) . . 2 1 1 2 . . (n - 1) n
-            */
+             *  Palindrome n:
+             *		n = 1:	Palindrome(n) = 1 1
+             *		n = 2:	Palindrome(n) = 2 1 1 2
+             *		n = 3:	Palindrome(n) = 3 2 1 1 2 3
+             *		etc...
+             *  Write a recursive program that will take n as input and produce the list:
+             *		n (n - 1) . . 2 1 1 2 . . (n - 1) n
+             */
             int n = 5;
             try
             {
@@ -196,7 +196,7 @@ namespace Recursion1
             if (n < 1)
                 throw new ArgumentException($"intput given {n} is not allowed.  It is expected to be positive", nameof(n));
 
-    		//return PalindromeHelper(n).ToList();
+    		// return PalindromeHelper(n).ToList();
 
             // In case we do not have access to IEnumerable's "yield return" construct.
             // See explanation for "yield return" in the PalindromeHelper(..) summary.
@@ -259,53 +259,40 @@ namespace Recursion1
 
         /// <summary>
         /// Assumption input to PalindromeHelper2 cannot be smaller than 1
-        ///
-        /// Syntax:
-        ///     The question mark (?) suffix after List<int>? in the method declaration:
-        ///         private static List<int> PalindromeHelper2(int n, List<int>? palindrome = null)
-        ///                                                           ^^^^^^^^^^
-        ///     Indicates that the varable palindrome may be null.  Without the ? suffix if
-        ///     the complier's static time analysis would flag palindrome as a WARNING if the
-        ///     compiler "thinks" that palindrome may get a null value
         /// </summary>
-        private static List<int> PalindromeHelper2(int n, List<int>? palindrome = null)
+        private static List<int> PalindromeHelper2(int n)
         {
             if (n == 0)
                 return new List<int> {};
 
             // Recursive definition
             var list = new List<int> { n };
-            list.AddRange(PalindromeHelper2(n - 1, palindrome));
+            list.AddRange(PalindromeHelper2(n - 1));
             list.Add(n);
 
             return list;
         }
 
         /// <summary>
-        /// An optimization over PalindromeHellper3 is having to initialize a single palindrome list
+        /// An optimization over PalindromeHellper2 is having to initialize a single palindrome list
         /// in this routine.
         ///
         /// This PalindromeHelper3(..) algorithm works because we start with palindrom = empty list
         ///
         /// When n <= 1 the calling routine eliminates this option with an exception
-        /// when n = 1 then we add 1 to an empty list then call PalindromeHelper3(0, emptylist) then add 1.  Works as advertised.
-        /// when n = 2 then we add 2 to an empty list, then call PalindromeHelper3(1, List { 2 }) then add 2.  Works as advertised.
-        /// when n = 3 then we add 3 to an empty list, then call PalindromeHelper3(1, List { 3 }) then add 3.  Works as advertised.
+        /// when n = 1 then we add 1 to an empty list then call PalindromeHelper3(0, emptylist)--which adds nothing then add 1.  Works as advertised.
+        /// when n = 2 then we add 2 to an empty list, then call PalindromeHelper3(1, List { 2 })--See above, then add 2.  
+        /// when n = 3 then we add 3 to an empty list, then call PalindromeHelper3(1, List { 3 })--See above, then add 3.
         /// etc...
-        ///
-        /// The return palindrom is superfluous because the calling routine can access the parameter palindrome!
         /// </summary>
-        private static List<int> PalindromeHelper3(int n, List<int> palindrome)
+        private static void PalindromeHelper3(int n, List<int> palindrome)
         {
             if (n == 0)
-                return palindrome;
+                return;
 
             palindrome.Add(n);
-            _ = PalindromeHelper3(n - 1, palindrome);
+            PalindromeHelper3(n - 1, palindrome);
             palindrome.Add(n);
-
-            // This return is superfluous
-            return palindrome;
         }
     }
 
@@ -437,7 +424,7 @@ namespace Recursion1
             if (rowRemaining.Skip(1).Any())
             {
                 yield return rowRemaining.First() + rowRemaining.Skip(1).First();
-                var res = AdditionOfPairs1(rowRemaining.Skip(1));
+                var pairAddition = AdditionOfPairs1(rowRemaining.Skip(1));
 
                 // This is an artifact of the "yield return" construct.  We cannot
                 // directly return res 
@@ -448,7 +435,7 @@ namespace Recursion1
                 // chain of recursion)
                 //
                 // In order to return res, we need to "yield return" element by element.
-                foreach (var elem in res)
+                foreach (var elem in pairAddition)
                     yield return elem;
             }
         }
@@ -460,21 +447,21 @@ namespace Recursion1
         /// </summary>
         private static List<int> AdditionOfPairs2(IEnumerable<int> list)
         {
-            var res = new List<int>();
+            var pairs = new List<int>();
 
             // Terminating condition is list contains 1 element only
             // Syntax:
             //      ! prefix indicates NOT logical operator
             //      list.Skip(1) will return the original list skipping the 0'th element
             //      .Any() will return true if the list contains at least 1 element
-            if (! list.Skip(1).Any()) return res;
+            if (! list.Skip(1).Any()) return pairs;
 
             // Process the first 2 items by adding them then add them to the res list
-            res.Add(list.First() + list.Skip(1).First());
+            pairs.Add(list.First() + list.Skip(1).First());
 
             // Recursive definition: Add the rest of the list
-            res.AddRange(AdditionOfPairs2(list.Skip(1)));
-            return res;
+            pairs.AddRange(AdditionOfPairs2(list.Skip(1)));
+            return pairs;
         }
 
         /// <summary>
@@ -588,6 +575,10 @@ namespace Recursion1
         }
     }
 }
+
+/// <summary>
+/// Bonus question...
+/// </summary>
 class FindWordInBoard
 {
 	private const int cols = 4;
