@@ -1,20 +1,17 @@
-# Recurson lesson 
+# Recursion: Non-Tree Recursive Example Problems with Solutions
 
-There are five Github repositories that are linked
+## Resources
 
-https://github.com/avifarah/Recurson
-Containing the powerpoint presentation
+There are five Github repositories that are linked:
 
-https://github.com/avifarah/Recurson.Recursion1
-Fully solved C# example of non tree recursive problems
+### The PowerPoint Presentation
 
-https://github.com/avifarah/Recurson.Recursion-Stripped
-Stripped down C# version of the examples in the repository Recursion.Recursion1
+[Recursion: Zero to Hero](https://github.com/avifarah/Recursion/blob/main/Recursion.pdf)
 
-https://github.com/avifarah/Recurson.TreeProcessing
-Fully solved C# examples of tree recursive problems
+### Code Examples (in C#)
 
-https://github.com/avifarah/Recurson.TreeProcessing-Stripped
-The Stripped down C# version of the examples in the repository Recursion.TreeProcessing
+[Unsolved non-tree recursive problems](https://github.com/avifarah/Recursion.Recursion-Stripped)<br />
+[Fully solved non-tree recursive problems](https://github.com/avifarah/Recurson.Recursion1)
 
-
+[Unsolved binary tree recursive problems](https://github.com/avifarah/Recursion.TreeProcessing-Stripped)<br />
+[Fully solved binary tree recursive problems](https://github.com/avifarah/Recursion.TreeProcessing)
